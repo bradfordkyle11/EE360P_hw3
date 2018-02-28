@@ -2,9 +2,12 @@ import java.util.*;
 import java.io.*;
 
 public class BookServer {
-  private static HashMap<String, Integer> library;
-  public static void main (String[] args) {
+  private HashMap<String, Integer> library;
+  public BookServer()
+  {
     library = new HashMap<>();
+  }
+  public static void main (String[] args) {
     int tcpPort;
     int udpPort;
     if (args.length != 1) {
@@ -15,9 +18,9 @@ public class BookServer {
     String absPath = new File("").getAbsolutePath();
     tcpPort = 7000;
     udpPort = 8000;
+    BookServer bs = new BookServer();
 
     // parse the inventory file
-
     try
     {
       Scanner sc = new Scanner(new FileReader(absPath + fileName));
@@ -27,7 +30,7 @@ public class BookServer {
         //input format: "Book Name" numCopies
         String[] tokens = cmd.split("\" ");
         tokens[0] = tokens[0].replace("\"", "");
-        library.put(tokens[0], Integer.valueOf(tokens[1]));
+        bs.library.put(tokens[0], Integer.valueOf(tokens[1]));
       }
 
       sc.close();

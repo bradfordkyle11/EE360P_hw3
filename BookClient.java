@@ -1,61 +1,76 @@
 import java.util.Scanner;
 import java.io.*;
 import java.util.*;
-public class BookClient {
-  public static void main (String[] args) {
-    String hostAddress;
-    final int TCP_PORT = 7000;// hardcoded -- must match the server's tcp port
-    final int UDP_PORT = 8000;// hardcoded -- must match the server's udp port
-    int clientId;
+public class BookClient
+{
+  final String hostAddress = "localhost";;
+  final int TCP_PORT = 7000; // hardcoded -- must match the server's tcp port
+  final int UDP_PORT = 8000; // hardcoded -- must match the server's udp port
+  static int CLIENTID;
+  static char MODE = 'U';
 
-    if (args.length != 2) {
-      System.out.println("ERROR: Provide 2 arguments: commandFile, clientId");
-      System.out.println("\t(1) <command-file>: file with commands to the server");
-      System.out.println("\t(2) client id: an integer between 1..9");
-      System.exit(-1);
+  static void connectTCP (Scanner scanner) throws Exception
+  {
+    Socket server = new Socket (hostAddress, TCP_PORT);
+    Scanner in = new Scanner (server.getInputStream ());
+    PrintStream out = new PrintStream (server.getOutputStream (), true);
+    PrintWriter log = new PrintWriter ("out_" + clientId + ".txt");
+
+    while (mode == 'T' && scanner.hasNextLine ())
+    {
+      String command = scanner.nextLine ();
+      Scanner cmdScanner = new Scanner (command);
+      String tag = cmdScanner.next ();
+
+      if (tag.equals ("setmode"))
+        MODE = cmdScanner.next ()[0];
+      else
+      {
+        out.println (command);
+        while (in.hasNextLine ())
+          log.println (in.nextLine ());
+      }
+    }
+  }
+
+  static void connectTCP (Scanner scanner) throws Exception
+  {
+    DatagramSocket server = new DatagramSocket (hostAddress, TCP_PORT);
+    while (scanner.hasNextLine ())
+    {
+
+    }
+    while (mode == 'U')
+    {
+
+    }
+  }
+
+  public static void main (String[] args) throws Exception
+  {
+
+    if (args.length != 2)
+    {
+      System.out.println ("ERROR: Provide 2 arguments: commandFile, clientId");
+      System.out.println ("\t (1) <command-file>: file with commands to the server");
+      System.out.println ("\t (2) client id: an integer between 1..9");
+      System.exit (-1);
     }
 
     String commandFile = args[0];
-    String absPath = new File("").getAbsolutePath();
-    clientId = Integer.parseInt(args[1]);
-    hostAddress = "localhost";
+    String absPath = new File ("").getAbsolutePath ();
+    Scanner scanner = new Scanner (new FileReader (absPath + commandFile));
 
-    try {
-        Scanner sc = new Scanner(new FileReader(absPath + commandFile));
+    CLIENTID = Integer.parseInt (args[1]);
 
-        while(sc.hasNextLine()) {
-          String cmd = sc.nextLine();
-          String[] tokens = cmd.split(" ");
-
-          if (tokens[0].equals("setmode")) {
-            // TODO: set the mode of communication for sending commands to the server 
-          }
-          else if (tokens[0].equals("borrow")) {
-            // TODO: send appropriate command to the server and display the
-            // appropriate responses form the server
-            String[] b_tokens = cmd.split(" \"");
-            String book = b_tokens[1].replace("\"", "");
-            // System.out.println(book);
-
-          } else if (tokens[0].equals("return")) {
-            // TODO: send appropriate command to the server and display the
-            // appropriate responses form the server
-          } else if (tokens[0].equals("inventory")) {
-            // TODO: send appropriate command to the server and display the
-            // appropriate responses form the server
-          } else if (tokens[0].equals("list")) {
-            // TODO: send appropriate command to the server and display the
-            // appropriate responses form the server
-          } else if (tokens[0].equals("exit")) {
-            // TODO: send appropriate command to the server 
-          } else {
-            System.out.println("ERROR: No such command");
-          }
-        }
-
-        sc.close();
-    } catch (FileNotFoundException e) {
-	e.printStackTrace();
+    while (true)
+    {
+      if (mode == 'T')
+        connectTCP (scanner);
+      else
+        connectUDP (scanner);
     }
+
+    scanner.close ();
   }
 }

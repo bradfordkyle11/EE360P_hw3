@@ -4,8 +4,8 @@ import java.util.*;
 public class BookClient {
   public static void main (String[] args) {
     String hostAddress;
-    int tcpPort;
-    int udpPort;
+    final int TCP_PORT = 7000;// hardcoded -- must match the server's tcp port
+    final int UDP_PORT = 8000;// hardcoded -- must match the server's udp port
     int clientId;
 
     if (args.length != 2) {
@@ -19,8 +19,6 @@ public class BookClient {
     String absPath = new File("").getAbsolutePath();
     clientId = Integer.parseInt(args[1]);
     hostAddress = "localhost";
-    tcpPort = 7000;// hardcoded -- must match the server's tcp port
-    udpPort = 8000;// hardcoded -- must match the server's udp port
 
     try {
         Scanner sc = new Scanner(new FileReader(absPath + commandFile));

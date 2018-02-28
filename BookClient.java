@@ -16,13 +16,14 @@ public class BookClient {
     }
 
     String commandFile = args[0];
+    String absPath = new File("").getAbsolutePath();
     clientId = Integer.parseInt(args[1]);
     hostAddress = "localhost";
     tcpPort = 7000;// hardcoded -- must match the server's tcp port
     udpPort = 8000;// hardcoded -- must match the server's udp port
 
     try {
-        Scanner sc = new Scanner(new FileReader(commandFile));
+        Scanner sc = new Scanner(new FileReader(absPath + commandFile));
 
         while(sc.hasNextLine()) {
           String cmd = sc.nextLine();
@@ -34,6 +35,10 @@ public class BookClient {
           else if (tokens[0].equals("borrow")) {
             // TODO: send appropriate command to the server and display the
             // appropriate responses form the server
+            String[] b_tokens = cmd.split(" \"");
+            String book = b_tokens[1].replace("\"", "");
+            // System.out.println(book);
+
           } else if (tokens[0].equals("return")) {
             // TODO: send appropriate command to the server and display the
             // appropriate responses form the server
@@ -49,6 +54,8 @@ public class BookClient {
             System.out.println("ERROR: No such command");
           }
         }
+
+        sc.close();
     } catch (FileNotFoundException e) {
 	e.printStackTrace();
     }

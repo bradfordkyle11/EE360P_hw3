@@ -1,49 +1,66 @@
 import java.util.Scanner;
 import java.io.*;
 import java.util.*;
+import java.net.*;
 public class BookClient
 {
-  final String hostAddress = "localhost";;
-  final int TCP_PORT = 7000; // hardcoded -- must match the server's tcp port
-  final int UDP_PORT = 8000; // hardcoded -- must match the server's udp port
+  final static String hostAddress = "localhost";;
+  final static int TCP_PORT = 7000; // hardcoded -- must match the server's tcp port
+  final static int UDP_PORT = 8000; // hardcoded -- must match the server's udp port
   static int CLIENTID;
-  static char MODE = 'U';
+  static char MODE = 'T';
 
-  static void connectTCP (Scanner scanner) throws Exception
+  static boolean connectTCP (Scanner scanner) throws Exception
   {
     Socket server = new Socket (hostAddress, TCP_PORT);
     Scanner in = new Scanner (server.getInputStream ());
     PrintStream out = new PrintStream (server.getOutputStream (), true);
-    PrintWriter log = new PrintWriter ("out_" + clientId + ".txt");
+    PrintWriter log = new PrintWriter ("out_" + CLIENTID + ".txt");
 
-    while (mode == 'T' && scanner.hasNextLine ())
+    boolean exit = false;
+    while (MODE == 'T' && scanner.hasNextLine ())
     {
       String command = scanner.nextLine ();
       Scanner cmdScanner = new Scanner (command);
       String tag = cmdScanner.next ();
+      
+      if (tag.equals("setmode"))
+        MODE = cmdScanner.next ().charAt(0);
+      out.println (command);
+      exit = tag.equals("exit");
+      if (exit)
+        break;
 
-      if (tag.equals ("setmode"))
-        MODE = cmdScanner.next ()[0];
-      else
+      while (in.hasNextLine ())
       {
-        out.println (command);
-        while (in.hasNextLine ())
-          log.println (in.nextLine ());
+        String last = in.nextLine();
+        if (last.equals("over"))
+          break;
+        log.println (last);
+        System.out.println(last);
       }
+      cmdScanner.close();
     }
+    
+    server.close();
+    in.close();
+    log.flush();
+    log.close();
+    return exit;
   }
 
-  static void connectTCP (Scanner scanner) throws Exception
+  static boolean connectUDP (Scanner scanner) throws Exception
   {
-    DatagramSocket server = new DatagramSocket (hostAddress, TCP_PORT);
+    DatagramSocket server = new DatagramSocket (TCP_PORT);
     while (scanner.hasNextLine ())
     {
 
     }
-    while (mode == 'U')
+    while (MODE == 'U')
     {
 
     }
+    return true;
   }
 
   public static void main (String[] args) throws Exception
@@ -65,10 +82,16 @@ public class BookClient
 
     while (true)
     {
-      if (mode == 'T')
-        connectTCP (scanner);
+      if (MODE == 'T')
+      {
+        if (connectTCP (scanner))
+          break;
+      }
       else
-        connectUDP (scanner);
+      {
+        if (connectUDP (scanner))
+          break;
+      }
     }
 
     scanner.close ();

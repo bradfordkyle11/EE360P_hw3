@@ -1,6 +1,8 @@
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.regex.*;
 import java.util.concurrent.atomic.*;
+
 import java.io.*;
 import java.net.*;
 
@@ -26,28 +28,11 @@ public class BookServer
 
   class ServerThread extends Thread
   {
-    int clientId;
     Socket s;
     DatagramSocket ds;
 
     public ServerThread (Socket s)
     {
-      Scanner scanner;
-      try
-      {
-        scanner = new Scanner (s.getInputStream ());
-      }
-      catch (Exception e)
-      {
-        e.printStackTrace ();
-      }
-      finally
-      {
-        if (scanner != null)
-          scanner.close ();
-      }
-
-      this.clientId = scanner.nextInt ();
       this.s = s;
     }
 
@@ -56,117 +41,125 @@ public class BookServer
       // this.clientId = clientId;
       this.ds = ds;
     }
-
+    
     public void start ()
     {
       if (s != null)
+      {
         handleSocket ();
+      }
       else
+      {
         handleDatagramSocket ();
+      }
     }
 
     public void handleSocket ()
     {
-      Scanner scanner;
+      Scanner scanner = null;
       try
       {
-        Scanner scanner = new Scanner (s.getInputStream ());
+        scanner = new Scanner (s.getInputStream ());
         PrintStream out = new PrintStream (s.getOutputStream (), true);
-        String command = scanner.nextLine ();
-
-        if (verbose)
-          System.out.println ("received:" + command);
-
-        Scanner cmdScanner = new Scanner (command);
-        String tag = cmdScanner.next ();
-
-        // setmode T|U
-        if (tag.equals ("setmode"))
+        while (true)
         {
-          synchronized (BookServer.class)
+          String command = scanner.nextLine ();
+  
+          if (verbose)
+            System.out.println ("received:" + command);
+  
+          Scanner cmdScanner = new Scanner (command);
+          String tag = cmdScanner.next ();
+  
+          if (tag.equals("setmode"))
           {
-            MODE = cmdScanner.next ();
+            if (cmdScanner.next().charAt(0) == 'U')
+              break;
           }
-        }
-        // borrow <student-name> <book-name>
-        else if (tag.equals ("borrow"))
-        {
-          String student = cmdScanner.next ();
-          String book = cmdScanner.next (Pattern.compile ("\"[^\"]+\""));
-          AtomicInteger quantity = library.get (book);
-          if (quantity == null)
-            out.println ("Request Failed - We do not have this book");
-          else
+          // borrow <student-name> <book-name>
+          else if (tag.equals ("borrow"))
           {
-            int value = quantity.decrementAndGet ();
-            if (value < 0)
+            String student = cmdScanner.next ();
+            String book = cmdScanner.findInLine (Pattern.compile ("\"[^\"]+\""));
+            AtomicInteger quantity = library.get (book);
+  
+            if (quantity == null)
+              out.println ("Request Failed - We do not have this book");
+            else
             {
-              quantity.incrementAndGet ();
-              out.println ("Request Failed - Book not available");
+              int value = quantity.decrementAndGet ();
+              if (value < 0)
+              {
+                quantity.incrementAndGet ();
+                out.println ("Request Failed - Book not available");
+              }
+              else
+              {
+                int id = recordId.getAndIncrement ();
+                history.put (id, new Pair <String, String> (student, book));
+                out.printf ("You request has been approved, %d %s %s\n", id, student, book);
+              }
+            }
+          }
+          else if (tag.equals ("return"))
+          {
+            int id = cmdScanner.nextInt ();
+            if (!history.containsKey (id))
+            {
+              out.println (id + " not found, no such borrow record");
             }
             else
             {
-              int id = recordId.getAndIncrement ();
-              history.put (id, new Pair <String, String> (student, book));
-              if (students.containsKey (student))
-                out.printf ("You request has been approved, %d %s %s\n", id, student, book);
+              String book = history.remove (id).y;
+  
+              AtomicInteger quantity = library.get (book);
+              quantity.incrementAndGet ();
+  
+              out.println (id + " is returned");
             }
           }
-        }
-        else if (tag.equals ("return"))
-        {
-          int id = cmdScanner.nextInt ();
-          if (!history.containsKey (id))
+          // list <student-name>
+          else if (tag.equals ("list"))
           {
-            out.println (id + " not found, no such borrow record");
+            String student = cmdScanner.next ();
+  
+            boolean found = false;
+            for (Integer id : history.keySet ())
+            {
+              String s = history.get (id).x;
+              String book = history.get (id).y;
+              if (s.equals (student))
+              {
+                out.println (id + " " + book);
+              }
+            }
+  
+            if (!found)
+              out.println ("No record found for " + student);
+          }
+          // inventory
+          else if (tag.equals ("inventory"))
+          {
+            for (String book : library.keySet ())
+            {
+              int value = Math.max (library.get (book).get (), 0);
+              out.println (book + " " + value);
+            }
+          }
+          // exit
+          else if (tag.equals ("exit"))
+          {
+            checkpoint ();
+            break;
           }
           else
           {
-            String book = history.remove (id).y;
-
-            AtomicInteger quantity = library.get (book);
-            quantity.incrementAndGet ();
-
-            out.println (id + " is returned");
+            throw new Exception ("Bad Input!");
           }
+          out.println("over");
         }
-        // list <student-name>
-        else if (tag.equals ("list"))
-        {
-          String student = cmdScanner.next ();
-
-          boolean found = false;
-          for (Integer id : history.keySet ())
-          {
-            String s = history.get (id).x;
-            String book = history.get (id).y;
-            if (s.equals (student))
-            {
-              out.println (id + " " + book);
-            }
-          }
-
-          if (!found)
-            out.println ("No record found for " + student);
-        }
-        // inventory
-        else if (tag.equals ("inventory"))
-        {
-          for (String book : library.keySet ())
-          {
-            int value = Math.max (library.get (book).get (), 0);
-            out.println (book + " " + value);
-          }
-        }
-        // exit
-        else if (tag.equals ("exit"))
-        {
-          checkpoint ();
-        }
-        else
-        {
-          throw new Exception ("Bad Input!");
-        }
+        out.close ();
+        s.close ();
       }
       catch (Exception e)
       {
@@ -176,26 +169,37 @@ public class BookServer
       {
         if (scanner != null)
           scanner.close ();
-        s.close ();
       }
     }
 
     public void handleDatagramSocket ()
     {
-
     }
   }
 
   static synchronized void checkpoint ()
   {
-    PrintWriter out = new PrintWriter ("inventory.txt");
-    for (String book : library.keySet ())
-      out.println (book + " " + library.get (book))
+    PrintWriter out = null;
+    try
+    {
+      out = new PrintWriter ("inventory.txt");
+      for (String book : library.keySet ())
+        out.println (book + " " + library.get (book));
+    }
+    catch (IOException e)
+    {
+      e.printStackTrace ();
+    }
+    finally
+    {
+      if (out != null)
+        out.close ();
+    }
   }
 
   static void initLibrary (String path)
   {
-    Scanner scanner;
+    Scanner scanner = null;
     try
     {
       scanner = new Scanner (new FileReader (path));
@@ -204,7 +208,7 @@ public class BookServer
       {
         String command = scanner.nextLine ();
         Scanner cmdScanner = new Scanner (command);
-        String book = cmdScanner.next (Pattern.compile ("\"[^\"]+\""));
+        String book = cmdScanner.findInLine (Pattern.compile ("\"[^\"]+\""));
         int quantity = cmdScanner.nextInt ();
         library.put (book, new AtomicInteger (quantity));
       }
@@ -220,18 +224,19 @@ public class BookServer
     }
   }
 
-  class TCPListener extends Thread
+  public class TCPListener extends Thread
   {
     public void start ()
     {
-      ServerSocket listener = new ServerSocket (TCP_PORT);
       try
       {
+        ServerSocket listener = new ServerSocket (TCP_PORT);
         Socket s;
         while ((s = listener.accept ()) != null)
         {
           new ServerThread (s).start ();
         }
+        listener.close ();
       }
       catch (IOException e)
       {
@@ -240,19 +245,19 @@ public class BookServer
     }
   }
 
-  class UDPListener extends Thread
+  public class UDPListener extends Thread
   {
     public void start ()
     {
-      DatagramSocket listener = new DatagramSocket (UDP_PORT);
-      try
-      {
+      // DatagramSocket listener = new DatagramSocket (UDP_PORT);
+      // try
+      // {
 
-      }
-      catch (IOException e)
-      {
-        System.err.println ("Server aborted:" + e);
-      }
+      // }
+      // catch (IOException e)
+      // {
+      //   System.err.println ("Server aborted:" + e);
+      // }
     }
   }
 
@@ -270,8 +275,9 @@ public class BookServer
     // parse the inventory file
     initLibrary (absPath + fileName);
 
+    BookServer bs = new BookServer ();
     //handle connections
-    new TCPListener ().start ();
-    new UDPListener ().start ();
+    bs.new TCPListener ().start ();
+    bs.new UDPListener ().start ();
   }
 }

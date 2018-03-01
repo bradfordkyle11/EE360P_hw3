@@ -1,9 +1,5 @@
-Your request has been approved, 1 Mike "The Letter"
-Request Failed - Book not available
-Your request has been approved, 2 Lucy "Divergent"
-1 "The Letter"
-1 is returned
-"The Letter" 1
-"The Great Gatsby" 15
-"Divergent" 9
-"The Count of Monte Cristo" 17
+Request Failed - We do not have this book
+Request Failed - We do not have this book
+Request Failed - We do not have this book
+No record found for Mike
+1 not found, no such borrow record

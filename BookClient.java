@@ -7,10 +7,16 @@ public class BookClient
   final static String hostAddress = "localhost";;
   final static int TCP_PORT = 7000; // hardcoded -- must match the server's tcp port
   final static int UDP_PORT = 8000; // hardcoded -- must match the server's udp port
-  static int CLIENTID;
-  static char MODE = 'T';
+  int CLIENTID;
+  char MODE = 'U';
+  boolean verbose = true;
 
-  static boolean connectTCP (Scanner fileScanner) throws Exception
+  public BookClient (int clientId)
+  {
+    CLIENTID = clientId;
+  }
+
+  public boolean connectTCP (Scanner fileScanner) throws Exception
   {
     Socket server = new Socket (hostAddress, TCP_PORT);
     Scanner in = new Scanner (server.getInputStream ());
@@ -36,8 +42,11 @@ public class BookClient
         String last = in.nextLine ();
         if (last.equals ("OVER"))
           break;
+
         log.println (last);
-        System.out.println ("Client Received: " + last);
+
+        if (verbose)
+          System.out.println ("Client Received: " + last);
       }
       cmdScanner.close ();
     }
@@ -51,18 +60,98 @@ public class BookClient
     return exit;
   }
 
-  static boolean connectUDP (Scanner fileScanner) throws Exception
+  public boolean connectUDP (Scanner fileScanner) throws Exception
   {
-    DatagramSocket server = new DatagramSocket (TCP_PORT);
-    while (fileScanner.hasNextLine ())
-    {
+    PrintWriter log = new PrintWriter ("out_" + CLIENTID + ".txt");
+    boolean exit = false;
 
-    }
-    while (MODE == 'U')
+    DatagramSocket server = null;
+    try
     {
+      server = new DatagramSocket (UDP_PORT);
+      while (MODE == 'U' && fileScanner.hasNextLine ())
+      {
 
+        String command = fileScanner.nextLine ();
+        Scanner cmdScanner = new Scanner (command);
+        String tag = cmdScanner.next ();
+
+        if (tag.equals ("setmode"))
+          MODE = cmdScanner.next ().charAt (0);
+
+        byte req[] = command.getBytes ();
+        DatagramPacket request = new DatagramPacket (
+            req,
+            req.length,
+            InetAddress.getByName (hostAddress),
+            UDP_PORT);
+
+        server.send (request);
+
+        exit = tag.equals ("exit");
+        if (exit)
+          break;
+
+        byte buf[] = new byte[UDPThread.BLOCK_SIZE];
+        DatagramPacket response = new DatagramPacket (buf, buf.length);
+        server.receive (response);
+
+        int numBlocks;
+        StringBuilder message;
+        {
+          String result = new String (response.getData (), 0, response.getLength ());
+          Scanner resultScanner = new Scanner (result);
+          numBlocks = resultScanner.nextInt ();
+
+          message = new StringBuilder (numBlocks * UDPThread.CONTENT_SIZE);
+          message.setLength (numBlocks * UDPThread.CONTENT_SIZE);
+
+          int index = resultScanner.nextInt ();
+          message.replace (
+            index * UDPThread.CONTENT_SIZE,
+            (index+1) * UDPThread.CONTENT_SIZE,
+            result.substring (UDPThread.HEADER_SIZE));
+        }
+
+        for (int count=0; count<numBlocks-1; count++)
+        {
+          response = new DatagramPacket (buf, buf.length);
+          server.receive (response);
+
+          String result = new String (response.getData (), 0, response.getLength ());
+          Scanner resultScanner = new Scanner (result);
+          resultScanner.nextInt (); // skip first token
+
+          int index = resultScanner.nextInt ();
+          message.replace (
+            index * UDPThread.CONTENT_SIZE,
+            (index+1) * UDPThread.CONTENT_SIZE,
+            result.substring (UDPThread.HEADER_SIZE));
+        }
+
+        if (message.length () > 1)
+          log.print (message.toString ());
+
+        if (verbose)
+          System.out.println ("Client Received: " + message.toString ());
+
+        cmdScanner.close ();
+      }
     }
-    return true;
+    catch (Exception e)
+    {
+      System.err.println ("Server aborted:" + e);
+    }
+    finally
+    {
+      if (server != null)
+        server.close ();
+    }
+
+    log.flush ();
+    log.close ();
+
+    return exit;
   }
 
   public static void main (String[] args) throws Exception
@@ -80,18 +169,18 @@ public class BookClient
     for (String each : args)
       System.out.println (each);
 
-    CLIENTID = Integer.parseInt (args[1]);
+    BookClient bc = new BookClient (Integer.parseInt (args[1]));
 
     while (true)
     {
-      if (MODE == 'T')
+      if (bc.MODE == 'T')
       {
-        if (connectTCP (fileScanner))
+        if (bc.connectTCP (fileScanner))
           break;
       }
       else
       {
-        if (connectUDP (fileScanner))
+        if (bc.connectUDP (fileScanner))
           break;
       }
     }

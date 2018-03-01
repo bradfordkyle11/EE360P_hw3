@@ -1,4 +1,3 @@
-import java.io.*;
 import java.net.*;
 import java.util.*;
 
@@ -15,11 +14,11 @@ public class UDPThread extends Thread
   public UDPThread (BookServer bs, DatagramPacket request) throws Exception
   {
     this.bs = bs;
-    this.s = new DatagramSocket (request.getPort ());
+    this.s = new DatagramSocket ();
     this.request = request;
   }
 
-  public void start ()
+  public void run ()
   {
     String result = "\n";
     String command = new String (request.getData (), 0, request.getLength ());
@@ -33,7 +32,9 @@ public class UDPThread extends Thread
     try
     {
       // borrow <student-name> <book-name>
-      if (tag.equals ("borrow"))
+      if (tag.equals("setmode")) 
+      {}
+      else if (tag.equals ("borrow"))
       {
         result = bs.borrowBook (cmdScanner) + "\n";
       }
@@ -71,6 +72,11 @@ public class UDPThread extends Thread
     {
       e.printStackTrace ();
     }
+    finally
+    {
+      cmdScanner.close ();
+    }
+
 
     int numPackets = (result.length () + CONTENT_SIZE - 1) / (CONTENT_SIZE);
 
@@ -82,7 +88,7 @@ public class UDPThread extends Thread
 
       DatagramPacket response = new DatagramPacket (
           buf,
-          length,
+          length + HEADER_SIZE,
           request.getAddress (),
           request.getPort ());
 

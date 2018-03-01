@@ -68,10 +68,9 @@ public class BookClient
     DatagramSocket server = null;
     try
     {
-      server = new DatagramSocket (UDP_PORT);
+      server = new DatagramSocket ();
       while (MODE == 'U' && fileScanner.hasNextLine ())
       {
-
         String command = fileScanner.nextLine ();
         Scanner cmdScanner = new Scanner (command);
         String tag = cmdScanner.next ();
@@ -111,36 +110,39 @@ public class BookClient
             index * UDPThread.CONTENT_SIZE,
             (index+1) * UDPThread.CONTENT_SIZE,
             result.substring (UDPThread.HEADER_SIZE));
+            
+          resultScanner.close();
         }
-
+        
         for (int count=0; count<numBlocks-1; count++)
         {
           response = new DatagramPacket (buf, buf.length);
           server.receive (response);
-
+          
           String result = new String (response.getData (), 0, response.getLength ());
           Scanner resultScanner = new Scanner (result);
           resultScanner.nextInt (); // skip first token
-
+          
           int index = resultScanner.nextInt ();
           message.replace (
             index * UDPThread.CONTENT_SIZE,
             (index+1) * UDPThread.CONTENT_SIZE,
             result.substring (UDPThread.HEADER_SIZE));
+          resultScanner.close();
         }
-
+          
         if (message.length () > 1)
           log.print (message.toString ());
-
+          
         if (verbose)
           System.out.println ("Client Received: " + message.toString ());
-
+          
         cmdScanner.close ();
       }
     }
     catch (Exception e)
     {
-      System.err.println ("Server aborted:" + e);
+      e.printStackTrace();
     }
     finally
     {

@@ -131,6 +131,7 @@ public class BookServer
         String book = cmdScanner.findInLine (Pattern.compile ("\"[^\"]+\""));
         int quantity = cmdScanner.nextInt ();
         library.put (book, new AtomicInteger (quantity));
+        cmdScanner.close ();
       }
     }
     catch (FileNotFoundException e)

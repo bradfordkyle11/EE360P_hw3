@@ -11,7 +11,7 @@ public class UDPListener extends Thread
     this.port = port;
   }
 
-  public void start ()
+  public void run ()
   {
     byte[] buf = new byte[UDPThread.BLOCK_SIZE];
 

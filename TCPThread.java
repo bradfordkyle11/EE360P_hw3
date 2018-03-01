@@ -14,7 +14,7 @@ public class TCPThread extends Thread
     this.s = s;
   }
 
-  public void start ()
+  public void run ()
   {
     Scanner in = null;
 
@@ -67,9 +67,11 @@ public class TCPThread extends Thread
         }
         else
         {
+          cmdScanner.close ();
           throw new Exception ("Bad Input!");
         }
         out.println ("OVER");
+        cmdScanner.close ();
       }
 
       s.close ();

@@ -33,7 +33,7 @@ public class BookServer
       {
         int id = recordId.getAndIncrement ();
         history.put (id, new Pair <String, String> (student, book));
-        result = String.format ("You request has been approved, %d %s %s\n", id, student, book);
+        result = String.format ("Your request has been approved, %d %s %s", id, student, book);
       }
     }
 
@@ -74,6 +74,7 @@ public class BookServer
       if (s.equals (student))
       {
         result.add (id + " " + book);
+        found = true;
       }
     }
 

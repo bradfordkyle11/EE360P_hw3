@@ -16,12 +16,11 @@ public class BookClient
     CLIENTID = clientId;
   }
 
-  public boolean connectTCP (Scanner fileScanner) throws Exception
+  public boolean connectTCP (Scanner fileScanner, PrintWriter log) throws Exception
   {
     Socket server = new Socket (hostAddress, TCP_PORT);
     Scanner in = new Scanner (server.getInputStream ());
     PrintStream out = new PrintStream (server.getOutputStream (), true);
-    PrintWriter log = new PrintWriter ("out_" + CLIENTID + ".txt");
 
     boolean exit = false;
     while (MODE == 'T' && fileScanner.hasNextLine ())
@@ -54,15 +53,12 @@ public class BookClient
     server.close ();
     in.close ();
     out.close ();
-    log.flush ();
-    log.close ();
 
     return exit;
   }
 
-  public boolean connectUDP (Scanner fileScanner) throws Exception
+  public boolean connectUDP (Scanner fileScanner, PrintWriter log) throws Exception
   {
-    PrintWriter log = new PrintWriter ("out_" + CLIENTID + ".txt");
     boolean exit = false;
 
     DatagramSocket server = null;
@@ -150,9 +146,6 @@ public class BookClient
         server.close ();
     }
 
-    log.flush ();
-    log.close ();
-
     return exit;
   }
 
@@ -173,20 +166,22 @@ public class BookClient
 
     BookClient bc = new BookClient (Integer.parseInt (args[1]));
 
+    PrintWriter log = new PrintWriter ("out_" + bc.CLIENTID + ".txt");
     while (true)
     {
       if (bc.MODE == 'T')
       {
-        if (bc.connectTCP (fileScanner))
+        if (bc.connectTCP (fileScanner, log))
           break;
       }
       else
       {
-        if (bc.connectUDP (fileScanner))
+        if (bc.connectUDP (fileScanner, log))
           break;
       }
     }
-
+    log.flush();
+    log.close();
     fileScanner.close ();
   }
 }

@@ -6,8 +6,9 @@ import java.util.concurrent.atomic.*;
 
 public class BookServer
 {
-  ConcurrentHashMap <String, AtomicInteger> library = new ConcurrentHashMap <> ();;
-  ConcurrentHashMap <Integer, Pair <String, String>> history = new ConcurrentHashMap <> ();;
+  ConcurrentHashMap <String, AtomicInteger> library = new ConcurrentHashMap <> ();
+  ArrayList<String> bookList = new ArrayList<>();
+  ConcurrentHashMap <Integer, Pair <String, String>> history = new ConcurrentHashMap <> ();
   AtomicInteger recordId = new AtomicInteger (1);
   static final int TCP_PORT = 7000;
   static final int UDP_PORT = 8000;
@@ -20,7 +21,10 @@ public class BookServer
     AtomicInteger quantity = library.get (book);
 
     if (quantity == null)
+    {
+      System.out.println(book);
       result = "Request Failed - We do not have this book";
+    }
     else
     {
       int value = quantity.decrementAndGet ();
@@ -36,6 +40,7 @@ public class BookServer
         result = String.format ("Your request has been approved, %d %s %s", id, student, book);
       }
     }
+
 
     return result;
   }
@@ -86,9 +91,9 @@ public class BookServer
 
   public ArrayList<String> inventory (Scanner cmdScanner) throws Exception
   {
+    //TODO: print in the same order that they were added to inventory....
     ArrayList<String> result = new ArrayList<> ();
-
-    for (String book : library.keySet ())
+    for (String book : bookList)
     {
       int value = Math.max (library.get (book).get (), 0);
       result.add (book + " " + value);
@@ -131,6 +136,7 @@ public class BookServer
         String book = cmdScanner.findInLine (Pattern.compile ("\"[^\"]+\""));
         int quantity = cmdScanner.nextInt ();
         library.put (book, new AtomicInteger (quantity));
+        bookList.add(book);
         cmdScanner.close ();
       }
     }

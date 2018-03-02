@@ -1,3 +1,8 @@
+/*
+Kyle Bradford (kmb3534)
+Spencer Yue (sty223)
+*/
+
 import java.net.*;
 
 public class UDPListener extends Thread

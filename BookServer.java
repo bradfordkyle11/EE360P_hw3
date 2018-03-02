@@ -7,11 +7,12 @@ import java.util.concurrent.atomic.*;
 public class BookServer
 {
   ConcurrentHashMap <String, AtomicInteger> library = new ConcurrentHashMap <> ();
-  ArrayList<String> bookList = new ArrayList<>();
+  ArrayList <String> bookList = new ArrayList <> ();
   ConcurrentHashMap <Integer, Pair <String, String>> history = new ConcurrentHashMap <> ();
   AtomicInteger recordId = new AtomicInteger (1);
   static final int TCP_PORT = 7000;
   static final int UDP_PORT = 8000;
+  static boolean verbose = Config.verbose;
 
   public String borrowBook (Scanner cmdScanner) throws Exception
   {
@@ -22,7 +23,8 @@ public class BookServer
 
     if (quantity == null)
     {
-      System.out.println(book);
+      if (verbose)
+        System.out.println (book);
       result = "Request Failed - We do not have this book";
     }
     else
@@ -40,7 +42,6 @@ public class BookServer
         result = String.format ("Your request has been approved, %d %s %s", id, student, book);
       }
     }
-
 
     return result;
   }
@@ -66,9 +67,9 @@ public class BookServer
     return result;
   }
 
-  public ArrayList<String> listBooks (Scanner cmdScanner) throws Exception
+  public ArrayList <String> listBooks (Scanner cmdScanner) throws Exception
   {
-    ArrayList<String> result = new ArrayList<> ();
+    ArrayList <String> result = new ArrayList <> ();
     String student = cmdScanner.next ();
 
     boolean found = false;
@@ -89,10 +90,9 @@ public class BookServer
     return result;
   }
 
-  public ArrayList<String> inventory (Scanner cmdScanner) throws Exception
+  public ArrayList <String> inventory (Scanner cmdScanner) throws Exception
   {
-    //TODO: print in the same order that they were added to inventory....
-    ArrayList<String> result = new ArrayList<> ();
+    ArrayList <String> result = new ArrayList <> ();
     for (String book : bookList)
     {
       int value = Math.max (library.get (book).get (), 0);
@@ -136,7 +136,7 @@ public class BookServer
         String book = cmdScanner.findInLine (Pattern.compile ("\"[^\"]+\""));
         int quantity = cmdScanner.nextInt ();
         library.put (book, new AtomicInteger (quantity));
-        bookList.add(book);
+        bookList.add (book);
         cmdScanner.close ();
       }
     }
@@ -155,6 +155,8 @@ public class BookServer
   {
     if (args.length != 1)
     {
+      for (String each : args)
+        System.out.println (each);
       System.out.println ("ERROR: Provide 1 argument: input file containing initial inventory");
       System.exit (-1);
     }

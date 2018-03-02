@@ -6,7 +6,7 @@ public class TCPThread extends Thread
 {
   BookServer bs;
   Socket s;
-  boolean verbose = true;
+  static boolean verbose = Config.verbose;
 
   public TCPThread (BookServer bs, Socket s)
   {

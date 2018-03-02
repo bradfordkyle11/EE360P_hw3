@@ -29,7 +29,7 @@ public class UDPListener extends Thread
     }
     catch (Exception e)
     {
-      System.err.println ("Server aborted:" + e);
+      e.printStackTrace ();
     }
     finally
     {

@@ -9,7 +9,7 @@ public class BookClient
   final static int UDP_PORT = 8000; // hardcoded -- must match the server's udp port
   int CLIENTID;
   char MODE = 'U';
-  boolean verbose = true;
+  static boolean verbose = Config.verbose;
 
   public BookClient (int clientId)
   {
@@ -106,39 +106,39 @@ public class BookClient
             index * UDPThread.CONTENT_SIZE,
             (index+1) * UDPThread.CONTENT_SIZE,
             result.substring (UDPThread.HEADER_SIZE));
-            
-          resultScanner.close();
+
+          resultScanner.close ();
         }
-        
+
         for (int count=0; count<numBlocks-1; count++)
         {
           response = new DatagramPacket (buf, buf.length);
           server.receive (response);
-          
+
           String result = new String (response.getData (), 0, response.getLength ());
           Scanner resultScanner = new Scanner (result);
           resultScanner.nextInt (); // skip first token
-          
+
           int index = resultScanner.nextInt ();
           message.replace (
             index * UDPThread.CONTENT_SIZE,
             (index+1) * UDPThread.CONTENT_SIZE,
             result.substring (UDPThread.HEADER_SIZE));
-          resultScanner.close();
+          resultScanner.close ();
         }
-          
+
         if (message.length () > 1)
           log.print (message.toString ());
-          
+
         if (verbose)
           System.out.println ("Client Received: " + message.toString ());
-          
+
         cmdScanner.close ();
       }
     }
     catch (Exception e)
     {
-      e.printStackTrace();
+      e.printStackTrace ();
     }
     finally
     {
@@ -160,13 +160,14 @@ public class BookClient
       System.exit (-1);
     }
 
+    if (verbose)
+      for (String each : args)
+        System.out.println (each);
+
     Scanner fileScanner = new Scanner (new FileReader (args[0]));
-    for (String each : args)
-      System.out.println (each);
-
     BookClient bc = new BookClient (Integer.parseInt (args[1]));
-
     PrintWriter log = new PrintWriter ("out_" + bc.CLIENTID + ".txt");
+
     while (true)
     {
       if (bc.MODE == 'T')
@@ -180,8 +181,8 @@ public class BookClient
           break;
       }
     }
-    log.flush();
-    log.close();
+    log.flush ();
+    log.close ();
     fileScanner.close ();
   }
 }

@@ -9,7 +9,7 @@ public class UDPThread extends Thread
   public static final int BLOCK_SIZE = 1024;
   public static final int HEADER_SIZE = 1 + 4 + 1 + 4;
   public static final int CONTENT_SIZE = BLOCK_SIZE - HEADER_SIZE;
-  boolean verbose = true;
+  static boolean verbose = Config.verbose;
 
   public UDPThread (BookServer bs, DatagramPacket request) throws Exception
   {
@@ -32,7 +32,7 @@ public class UDPThread extends Thread
     try
     {
       // borrow <student-name> <book-name>
-      if (tag.equals("setmode")) 
+      if (tag.equals("setmode"))
       {}
       else if (tag.equals ("borrow"))
       {

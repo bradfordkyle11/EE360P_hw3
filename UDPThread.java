@@ -11,9 +11,6 @@ public class UDPThread extends Thread
   BookServer bs;
   DatagramSocket s;
   DatagramPacket request;
-  public static final int BLOCK_SIZE = 1024;
-  public static final int HEADER_SIZE = 1 + 4 + 1 + 4;
-  public static final int CONTENT_SIZE = BLOCK_SIZE - HEADER_SIZE;
   static boolean verbose = Config.verbose;
 
   public UDPThread (BookServer bs, DatagramPacket request) throws Exception
@@ -25,7 +22,7 @@ public class UDPThread extends Thread
 
   public void run ()
   {
-    String result = "\n";
+    String result = Config.CRLF;
     String command = new String (request.getData (), 0, request.getLength ());
 
     if (verbose)
@@ -41,26 +38,26 @@ public class UDPThread extends Thread
       {}
       else if (tag.equals ("borrow"))
       {
-        result = bs.borrowBook (cmdScanner) + "\n";
+        result = bs.borrowBook (cmdScanner) + Config.CRLF;
       }
       else if (tag.equals ("return"))
       {
-        result = bs.returnBook (cmdScanner) + "\n";
+        result = bs.returnBook (cmdScanner) + Config.CRLF;
       }
       // list <student-name>
       else if (tag.equals ("list"))
       {
         StringBuilder sb = new StringBuilder ();
         for (String each : bs.listBooks (cmdScanner))
-          sb.append (each + "\n");
+          sb.append (each + Config.CRLF);
         result = sb.toString ();
       }
       // inventory
       else if (tag.equals ("inventory"))
       {
         StringBuilder sb = new StringBuilder ();
-        for (String each : bs.inventory (cmdScanner))
-          sb.append (each + "\n");
+        for (String each : bs.inventory ())
+          sb.append (each + Config.CRLF);
         result = sb.toString ();
       }
       // exit
@@ -82,18 +79,17 @@ public class UDPThread extends Thread
       cmdScanner.close ();
     }
 
+    int numPackets = (result.length () + Config.CONTENT_SIZE - 1) / (Config.CONTENT_SIZE);
 
-    int numPackets = (result.length () + CONTENT_SIZE - 1) / (CONTENT_SIZE);
-
-    for (int i=0; i<result.length (); i+=CONTENT_SIZE)
+    for (int i=0; i<result.length (); i+=Config.CONTENT_SIZE)
     {
-      String stamp = String.format ("%04d %04d\n", numPackets, i/CONTENT_SIZE);
-      int length = Math.min (result.length () - i, CONTENT_SIZE);
+      String stamp = String.format ("%04d %04d\n", numPackets, i/Config.CONTENT_SIZE);
+      int length = Math.min (result.length () - i, Config.CONTENT_SIZE);
       byte buf[] = (stamp + result.substring (i, i + length)).getBytes ();
 
       DatagramPacket response = new DatagramPacket (
           buf,
-          length + HEADER_SIZE,
+          length + Config.HEADER_SIZE,
           request.getAddress (),
           request.getPort ());
 

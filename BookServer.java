@@ -95,7 +95,7 @@ public class BookServer
     return result;
   }
 
-  public ArrayList <String> inventory (Scanner cmdScanner) throws Exception
+  public ArrayList <String> inventory () throws Exception
   {
     ArrayList <String> result = new ArrayList <> ();
     for (String book : bookList)
@@ -107,24 +107,15 @@ public class BookServer
     return result;
   }
 
-  public synchronized void checkpoint ()
+  public synchronized void checkpoint () throws Exception
   {
-    PrintWriter out = null;
-    try
-    {
-      out = new PrintWriter ("inventory.txt");
-      for (String book : library.keySet ())
-        out.println (book + " " + library.get (book));
-    }
-    catch (IOException e)
-    {
-      e.printStackTrace ();
-    }
-    finally
-    {
-      if (out != null)
-        out.close ();
-    }
+    PrintWriter out = new PrintWriter ("inventory.txt");
+    for (String book : bookList)
+      out.println (book + " " + library.get (book));
+    out.flush ();
+    out.close ();
+
+    DumbRequirements.truncateLastLine ("inventory.txt");
   }
 
   public void initLibrary (String path)

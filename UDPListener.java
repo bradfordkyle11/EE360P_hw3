@@ -18,7 +18,7 @@ public class UDPListener extends Thread
 
   public void run ()
   {
-    byte[] buf = new byte[UDPThread.BLOCK_SIZE];
+    byte[] buf = new byte[Config.COMMAND_SIZE];
 
     DatagramSocket listener = null;
     try

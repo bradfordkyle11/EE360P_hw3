@@ -61,7 +61,7 @@ public class TCPThread extends Thread
         // inventory
         else if (tag.equals ("inventory"))
         {
-          for (String each : bs.inventory (cmdScanner))
+          for (String each : bs.inventory ())
             out.println (each);
         }
         // exit

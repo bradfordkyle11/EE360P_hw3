@@ -92,7 +92,7 @@ public class BookClient
         if (exit)
           break;
 
-        byte buf[] = new byte[UDPThread.BLOCK_SIZE];
+        byte buf[] = new byte[Config.BLOCK_SIZE];
         DatagramPacket response = new DatagramPacket (buf, buf.length);
         server.receive (response);
 
@@ -103,14 +103,14 @@ public class BookClient
           Scanner resultScanner = new Scanner (result);
           numBlocks = resultScanner.nextInt ();
 
-          message = new StringBuilder (numBlocks * UDPThread.CONTENT_SIZE);
-          message.setLength (numBlocks * UDPThread.CONTENT_SIZE);
+          message = new StringBuilder (numBlocks * Config.CONTENT_SIZE);
+          message.setLength (numBlocks * Config.CONTENT_SIZE);
 
           int index = resultScanner.nextInt ();
           message.replace (
-            index * UDPThread.CONTENT_SIZE,
-            (index+1) * UDPThread.CONTENT_SIZE,
-            result.substring (UDPThread.HEADER_SIZE));
+            index * Config.CONTENT_SIZE,
+            (index+1) * Config.CONTENT_SIZE,
+            result.substring (Config.HEADER_SIZE));
 
           resultScanner.close ();
         }
@@ -126,13 +126,13 @@ public class BookClient
 
           int index = resultScanner.nextInt ();
           message.replace (
-            index * UDPThread.CONTENT_SIZE,
-            (index+1) * UDPThread.CONTENT_SIZE,
-            result.substring (UDPThread.HEADER_SIZE));
+            index * Config.CONTENT_SIZE,
+            (index+1) * Config.CONTENT_SIZE,
+            result.substring (Config.HEADER_SIZE));
           resultScanner.close ();
         }
 
-        if (message.length () > 1)
+        if (message.length () > Config.CRLF.length ())
           log.print (message.toString ());
 
         if (verbose)
@@ -171,7 +171,8 @@ public class BookClient
 
     Scanner fileScanner = new Scanner (new FileReader (args[0]));
     BookClient bc = new BookClient (Integer.parseInt (args[1]));
-    PrintWriter log = new PrintWriter ("out_" + bc.CLIENTID + ".txt");
+    String filename = "out_" + bc.CLIENTID + ".txt";
+    PrintWriter log = new PrintWriter (filename);
 
     while (true)
     {
@@ -186,8 +187,12 @@ public class BookClient
           break;
       }
     }
+
+    fileScanner.close ();
+
     log.flush ();
     log.close ();
-    fileScanner.close ();
+
+    DumbRequirements.truncateLastLine (filename);
   }
 }

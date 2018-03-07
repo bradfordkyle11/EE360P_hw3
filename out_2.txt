@@ -1,9 +1,31 @@
 Your request has been approved, 3 Mike "The Letter"
+Your request has been approved, 4 Mike "The Count of Monte Cristo"
+Your request has been approved, 5 Mike "Divergent"
+Your request has been approved, 6 Mike "The Count of Monte Cristo"
+Your request has been approved, 7 Mike "Divergent"
+Your request has been approved, 8 Mike "The Count of Monte Cristo"
+Your request has been approved, 9 Mike "The Great Gatsby"
+Your request has been approved, 10 Mike "The Count of Monte Cristo"
+Your request has been approved, 11 Mike "The Great Gatsby"
+Your request has been approved, 12 Mike "The Count of Monte Cristo"
+Your request has been approved, 13 Mike "The Great Gatsby"
+Your request has been approved, 14 Mike "The Count of Monte Cristo"
 Request Failed - Book not available
-Your request has been approved, 4 Lucy "Divergent"
+Your request has been approved, 15 Lucy "Divergent"
 3 "The Letter"
+4 "The Count of Monte Cristo"
+5 "Divergent"
+6 "The Count of Monte Cristo"
+7 "Divergent"
+8 "The Count of Monte Cristo"
+9 "The Great Gatsby"
+10 "The Count of Monte Cristo"
+11 "The Great Gatsby"
+12 "The Count of Monte Cristo"
+13 "The Great Gatsby"
+14 "The Count of Monte Cristo"
 1 not found, no such borrow record
 "The Letter" 0
-"The Great Gatsby" 15
-"Divergent" 8
-"The Count of Monte Cristo" 17
+"The Great Gatsby" 12
+"Divergent" 6
+"The Count of Monte Cristo" 11

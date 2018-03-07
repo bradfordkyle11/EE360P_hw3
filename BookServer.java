@@ -13,7 +13,7 @@ public class BookServer
 {
   ConcurrentHashMap <String, AtomicInteger> library = new ConcurrentHashMap <> ();
   ArrayList <String> bookList = new ArrayList <> ();
-  ConcurrentHashMap <Integer, Pair <String, String>> history = new ConcurrentHashMap <> ();
+  ConcurrentSkipListMap <Integer, Pair <String, String>> history = new ConcurrentSkipListMap <> ();
   AtomicInteger recordId = new AtomicInteger (1);
   static final int TCP_PORT = 7000;
   static final int UDP_PORT = 8000;
